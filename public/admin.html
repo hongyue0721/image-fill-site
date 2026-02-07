@@ -19,7 +19,7 @@
             <input id="adminPassword" type="password" placeholder="输入管理员密码" />
             <button id="loginBtn">登录</button>
           </div>
-          <div class="note">默认密码在 .env 中配置（ADMIN_PASSWORD），默认值为 admin123。</div>
+          <div class="note">默认密码在 config.con 中配置（ADMIN_PASSWORD），默认值为 admin123。</div>
           <div id="loginStatus" class="status"></div>
         </div>
 
@@ -39,29 +39,16 @@
           </div>
 
           <div class="panel">
-            <h3>上游主通道（Primary）</h3>
+            <h3>上游通道（new-api）</h3>
             <div class="two-col">
               <input id="pName" type="text" placeholder="名称" />
               <input id="pModel" type="text" placeholder="模型名" />
             </div>
             <div class="two-col" style="margin-top: 10px">
-              <input id="pBaseUrl" type="url" placeholder="Base URL，例如 http://127.0.0.1:3000" />
+              <input id="pBaseUrl" type="url" placeholder="Base URL，例如 https://api.example.com" />
               <input id="pApiKey" type="text" placeholder="API Key" />
             </div>
-            <label><input id="pEnabled" type="checkbox" /> 启用主通道</label>
-          </div>
-
-          <div class="panel">
-            <h3>上游备用通道（Secondary）</h3>
-            <div class="two-col">
-              <input id="sName" type="text" placeholder="名称" />
-              <input id="sModel" type="text" placeholder="模型名" />
-            </div>
-            <div class="two-col" style="margin-top: 10px">
-              <input id="sBaseUrl" type="url" placeholder="Base URL，例如 http://127.0.0.1:8000" />
-              <input id="sApiKey" type="text" placeholder="API Key" />
-            </div>
-            <label><input id="sEnabled" type="checkbox" /> 启用备用通道</label>
+            <label><input id="pEnabled" type="checkbox" /> 启用通道</label>
           </div>
 
           <div class="panel">

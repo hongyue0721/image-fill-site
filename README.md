@@ -1,6 +1,6 @@
 # 西瓜填充网站
 
-这是一个基于 Express 的图像编辑网站：用户输入文本后，系统会按模板拼接 prompt，携带原图和 mask 调用 OpenAI 兼容 `/v1/images/edits` 接口，并将结果作为当前展示图。
+这是一个基于 Express 的图像编辑网站：用户输入文本后，系统会按模板拼接 prompt，携带原图和 mask 调用 new-api 兼容 `/v1/images/edits` 接口，并将结果作为当前展示图。
 
 ## 架构与功能说明
 
@@ -15,7 +15,7 @@
 
 1. 用户在前台输入文本并提交到 `POST /api/generate`。
 2. 后端读取配置，生成最终 prompt（默认模板：`将这个西瓜里填满{}`）。
-3. 后端按主通道 -> 备通道顺序尝试上游图片编辑接口。
+3. 后端使用唯一上游通道（new-api）调用图片编辑接口。
 4. 成功后写入 `data/latest-image.bin` 与 `data/latest-meta.json`。
 5. 前台通过 `GET /api/images/current` 获取最新图并刷新显示。
 
@@ -24,7 +24,7 @@
 后端在启动时按以下优先级加载配置：
 
 1. `config.con`（推荐，方便部署时统一修改）
-2. `.env`
+2. `.env`（可选）
 3. 代码默认值（`server.js` 内置）
 
 说明：`data/config.json` 是后台页面保存的业务配置（标题、模板、上游参数等），和环境变量共同构成最终行为。
@@ -78,10 +78,10 @@ nano config.con
 - `UPSTREAM_PRIMARY_BASE_URL`
 - `UPSTREAM_PRIMARY_API_KEY`
 - `UPSTREAM_PRIMARY_MODEL`
+- `HOST`（公网访问建议设为 `0.0.0.0`）
 
 可选：
 
-- `UPSTREAM_SECONDARY_*`（备用通道）
 - `PORT`
 - `REQUEST_TIMEOUT_MS`
 
@@ -93,8 +93,10 @@ npm start
 
 默认访问地址：
 
-- 前台：`http://127.0.0.1:3001/`
-- 后台：`http://127.0.0.1:3001/admin`
+- 前台：`http://你的域名:3001/`
+- 后台：`http://你的域名:3001/admin`
+
+公网访问前请确保云服务器安全组和系统防火墙已放行 `3001/TCP`。
 
 ### 5) 推荐用 systemd 常驻
 

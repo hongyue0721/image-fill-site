@@ -1,4 +1,5 @@
 PORT=3001
+HOST=0.0.0.0
 
 # Admin password for /admin login page
 ADMIN_PASSWORD=admin123
@@ -7,11 +8,6 @@ ADMIN_PASSWORD=admin123
 REQUEST_TIMEOUT_MS=120000
 
 # Primary upstream (recommended: new-api)
-UPSTREAM_PRIMARY_BASE_URL=http://127.0.0.1:3000
+UPSTREAM_PRIMARY_BASE_URL=https://your-newapi-domain
 UPSTREAM_PRIMARY_API_KEY=replace_with_your_new_api_key
 UPSTREAM_PRIMARY_MODEL=gpt-image-1
-
-# Secondary upstream (optional fallback: grok2api)
-UPSTREAM_SECONDARY_BASE_URL=http://127.0.0.1:8000
-UPSTREAM_SECONDARY_API_KEY=
-UPSTREAM_SECONDARY_MODEL=grok-imagine-1.0-edit

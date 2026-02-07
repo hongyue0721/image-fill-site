@@ -14,6 +14,7 @@ if (fs.existsSync(CON_FILE)) {
 dotenv.config();
 
 const app = express();
+const HOST = process.env.HOST || "0.0.0.0";
 const PORT = Number(process.env.PORT || 3001);
 
 const ROOT_DIR = __dirname;
@@ -78,21 +79,12 @@ function defaultConfig() {
     siteSubtitle: "猜错了当我老婆",
     promptTemplate: "将这个西瓜里填满{}",
     requestTimeoutMs: Number(process.env.REQUEST_TIMEOUT_MS || 120000),
-    upstreams: {
-      primary: {
-        name: "new-api",
-        enabled: true,
-        baseUrl: process.env.UPSTREAM_PRIMARY_BASE_URL || "http://127.0.0.1:3000",
-        apiKey: process.env.UPSTREAM_PRIMARY_API_KEY || "",
-        model: process.env.UPSTREAM_PRIMARY_MODEL || "gpt-image-1",
-      },
-      secondary: {
-        name: "grok2api",
-        enabled: false,
-        baseUrl: process.env.UPSTREAM_SECONDARY_BASE_URL || "http://127.0.0.1:8000",
-        apiKey: process.env.UPSTREAM_SECONDARY_API_KEY || "",
-        model: process.env.UPSTREAM_SECONDARY_MODEL || "grok-imagine-1.0-edit",
-      },
+    upstream: {
+      name: "new-api",
+      enabled: true,
+      baseUrl: process.env.UPSTREAM_PRIMARY_BASE_URL || "http://127.0.0.1:3000",
+      apiKey: process.env.UPSTREAM_PRIMARY_API_KEY || "",
+      model: process.env.UPSTREAM_PRIMARY_MODEL || "gpt-image-1",
     },
   };
 }
@@ -106,6 +98,9 @@ function loadConfig() {
   try {
     const raw = fs.readFileSync(CONFIG_FILE, "utf-8");
     const parsed = JSON.parse(raw);
+    if (!parsed.upstream && parsed.upstreams && parsed.upstreams.primary) {
+      parsed.upstream = parsed.upstreams.primary;
+    }
     return deepMerge(defaults, parsed);
   } catch {
     return defaults;
@@ -160,15 +155,13 @@ function sanitizeConfigInput(input, prev) {
   out.promptTemplate = String(out.promptTemplate || "").trim().slice(0, 500) || prev.promptTemplate;
   out.requestTimeoutMs = Math.min(Math.max(Number(out.requestTimeoutMs || 120000), 10000), 300000);
 
-  for (const key of ["primary", "secondary"]) {
-    const up = out.upstreams[key] || {};
-    up.name = String(up.name || "").trim() || key;
-    up.enabled = Boolean(up.enabled);
-    up.baseUrl = String(up.baseUrl || "").trim();
-    up.apiKey = String(up.apiKey || "").trim();
-    up.model = String(up.model || "").trim();
-    out.upstreams[key] = up;
-  }
+  const up = out.upstream || {};
+  up.name = String(up.name || "").trim() || "new-api";
+  up.enabled = Boolean(up.enabled);
+  up.baseUrl = String(up.baseUrl || "").trim();
+  up.apiKey = String(up.apiKey || "").trim();
+  up.model = String(up.model || "").trim();
+  out.upstream = up;
 
   return out;
 }
@@ -260,24 +253,11 @@ async function tryEditWithUpstream(upstream, prompt, timeoutMs) {
 }
 
 async function generateImage(prompt, config) {
-  const queue = [config.upstreams.primary, config.upstreams.secondary].filter(
-    (u) => u && u.enabled && u.baseUrl && u.apiKey && u.model
-  );
-
-  if (!queue.length) {
+  const upstream = config.upstream;
+  if (!upstream || !upstream.enabled || !upstream.baseUrl || !upstream.apiKey || !upstream.model) {
     throw new Error("no available upstream configured");
   }
-
-  let lastError = null;
-  for (const upstream of queue) {
-    try {
-      return await tryEditWithUpstream(upstream, prompt, config.requestTimeoutMs);
-    } catch (error) {
-      lastError = error;
-    }
-  }
-
-  throw lastError || new Error("all upstreams failed");
+  return tryEditWithUpstream(upstream, prompt, config.requestTimeoutMs);
 }
 
 ensureDir(DATA_DIR);
@@ -429,6 +409,6 @@ app.use((err, req, res, next) => {
   return res.status(500).json({ error: "internal server error" });
 });
 
-app.listen(PORT, () => {
-  console.log(`Image Fill Web running at http://127.0.0.1:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`Image Fill Web running at http://${HOST}:${PORT}`);
 });

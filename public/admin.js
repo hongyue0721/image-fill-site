@@ -34,19 +34,12 @@ function fillForm(cfg) {
   h("promptTemplate").value = cfg.promptTemplate || "";
   h("requestTimeoutMs").value = String(cfg.requestTimeoutMs || 120000);
 
-  const p = cfg.upstreams.primary || {};
+  const p = cfg.upstream || {};
   h("pName").value = p.name || "";
   h("pModel").value = p.model || "";
   h("pBaseUrl").value = p.baseUrl || "";
   h("pApiKey").value = p.apiKey || "";
   h("pEnabled").checked = !!p.enabled;
-
-  const s = cfg.upstreams.secondary || {};
-  h("sName").value = s.name || "";
-  h("sModel").value = s.model || "";
-  h("sBaseUrl").value = s.baseUrl || "";
-  h("sApiKey").value = s.apiKey || "";
-  h("sEnabled").checked = !!s.enabled;
 }
 
 function collectForm() {
@@ -55,21 +48,12 @@ function collectForm() {
     siteSubtitle: h("siteSubtitle").value,
     promptTemplate: h("promptTemplate").value,
     requestTimeoutMs: Number(h("requestTimeoutMs").value || 120000),
-    upstreams: {
-      primary: {
-        name: h("pName").value,
-        model: h("pModel").value,
-        baseUrl: h("pBaseUrl").value,
-        apiKey: h("pApiKey").value,
-        enabled: h("pEnabled").checked,
-      },
-      secondary: {
-        name: h("sName").value,
-        model: h("sModel").value,
-        baseUrl: h("sBaseUrl").value,
-        apiKey: h("sApiKey").value,
-        enabled: h("sEnabled").checked,
-      },
+    upstream: {
+      name: h("pName").value,
+      model: h("pModel").value,
+      baseUrl: h("pBaseUrl").value,
+      apiKey: h("pApiKey").value,
+      enabled: h("pEnabled").checked,
     },
   };
 }
