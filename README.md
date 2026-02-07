@@ -1,141 +1,159 @@
-# 西瓜填充网站（萌新友好版）
+# 西瓜填充网站
 
-这是一个可以把自然语言填进提示词模板并做图生图编辑的小网站。
+这是一个基于 Express 的图像编辑网站：用户输入文本后，系统会按模板拼接 prompt，携带原图和 mask 调用 OpenAI 兼容 `/v1/images/edits` 接口，并将结果作为当前展示图。
 
-你输入一句话，例如：`草莓果肉`，系统会自动拼成：
+## 架构与功能说明
 
-`将这个西瓜里填满草莓果肉`
+### 1) 系统结构
 
-然后把原图 + 底图（mask）一起发给 OpenAI 兼容图片编辑接口，返回的新图会直接替换页面里的图片。
+- `server.js`：唯一后端入口，负责静态资源、API、配置加载、上游调用、素材管理。
+- `public/index.html` + `public/app.js`：前台页面，提交文本并展示最新图片。
+- `public/admin.html` + `public/admin.js`：后台页面，修改站点配置与上传素材。
+- `public/style.css`：前后台公共样式。
 
-## 你会得到什么
+### 2) 运行时数据流
 
-- 一个前台页面：`/`
-  - 只展示图片结果
-  - 输入文字后点击生成
-- 一个管理后台：`/admin`
-  - 修改网站标题、副标题、提示词模板
-  - 修改主/备 API 通道配置（Base URL / API Key / Model）
-  - 上传原图和底图（mask）
-  - 一键重置到原图
+1. 用户在前台输入文本并提交到 `POST /api/generate`。
+2. 后端读取配置，生成最终 prompt（默认模板：`将这个西瓜里填满{}`）。
+3. 后端按主通道 -> 备通道顺序尝试上游图片编辑接口。
+4. 成功后写入 `data/latest-image.bin` 与 `data/latest-meta.json`。
+5. 前台通过 `GET /api/images/current` 获取最新图并刷新显示。
 
-## 目录说明
+### 3) 配置层级
 
-- `server.js`：后端服务（Express）
-- `public/index.html`：前台页面
-- `public/admin.html`：后台页面
-- `public/style.css`：样式
-- `uploads/original.jpg`：当前原图（后台可替换）
-- `uploads/mask.png`：当前底图 mask（后台可替换）
-- `data/latest-image.bin`：最新生成图
-- `data/config.json`：后台保存的配置
+后端在启动时按以下优先级加载配置：
 
-## 第一步：准备环境
+1. `config.con`（推荐，方便部署时统一修改）
+2. `.env`
+3. 代码默认值（`server.js` 内置）
 
-你需要先安装：
+说明：`data/config.json` 是后台页面保存的业务配置（标题、模板、上游参数等），和环境变量共同构成最终行为。
 
-- Node.js 18+
+### 4) 目录说明
 
-进入项目目录：
+- `nocut.jpg`：默认原图。
+- `cut.png`：默认 mask 图。
+- `uploads/original.jpg`：当前生效原图（可后台覆盖）。
+- `uploads/mask.png`：当前生效 mask（可后台覆盖）。
+- `data/config.json`：后台保存配置。
+- `data/latest-image.bin`：最近一次生成结果。
+- `config.con`：部署时主要配置文件（新增）。
+- `config.con.example`：配置模板。
 
-```bash
-cd "C:\Users\MSI-\Desktop\image-fill-site"
-```
+## Ubuntu 部署流程
 
-## 第二步：安装依赖
+以下流程适用于 Ubuntu 22.04/24.04。
 
-```bash
-npm install
-```
-
-## 第三步：配置环境变量
-
-复制模板：
+### 1) 安装 Node.js 18+
 
 ```bash
-copy .env.example .env
+sudo apt update
+sudo apt install -y curl ca-certificates gnupg
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+node -v
+npm -v
 ```
 
-修改 `.env` 里的关键项：
+### 2) 获取项目并安装依赖
 
-- `ADMIN_PASSWORD`：后台登录密码
-- `UPSTREAM_PRIMARY_BASE_URL`：主通道地址（建议 new-api）
-- `UPSTREAM_PRIMARY_API_KEY`：主通道 key
-- `UPSTREAM_PRIMARY_MODEL`：主通道模型名（例如 `gpt-image-1`）
-- 可选配置备用通道：`UPSTREAM_SECONDARY_*`
+```bash
+git clone <your-repo-url>
+cd image-fill-site
+npm install --production
+```
 
-## 第四步：启动项目
+### 3) 配置 `config.con`
+
+复制模板并编辑：
+
+```bash
+cp config.con.example config.con
+nano config.con
+```
+
+至少修改这些项：
+
+- `ADMIN_PASSWORD`
+- `UPSTREAM_PRIMARY_BASE_URL`
+- `UPSTREAM_PRIMARY_API_KEY`
+- `UPSTREAM_PRIMARY_MODEL`
+
+可选：
+
+- `UPSTREAM_SECONDARY_*`（备用通道）
+- `PORT`
+- `REQUEST_TIMEOUT_MS`
+
+### 4) 启动服务
 
 ```bash
 npm start
 ```
 
-启动后访问：
+默认访问地址：
 
 - 前台：`http://127.0.0.1:3001/`
 - 后台：`http://127.0.0.1:3001/admin`
 
-## 素材图片怎么处理
+### 5) 推荐用 systemd 常驻
 
-项目启动时会自动尝试把根目录这两个文件复制为默认素材：
+创建服务文件：
 
-- `nocut.jpg` -> `uploads/original.jpg`
-- `cut.png` -> `uploads/mask.png`
+```bash
+sudo nano /etc/systemd/system/image-fill.service
+```
 
-如果你想换图，直接去后台上传即可。
+写入：
 
-## API 设计（给你自己前端调用）
+```ini
+[Unit]
+Description=Image Fill Web
+After=network.target
 
-- `POST /api/generate`
-  - body: `{ "text": "草莓果肉" }`
-  - 作用：图生图生成并保存最新结果
-- `GET /api/images/current`
-  - 作用：返回当前展示图（二进制）
-- `GET /api/public-config`
-  - 作用：前台读取标题和模板信息
+[Service]
+Type=simple
+WorkingDirectory=/opt/image-fill-site
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=3
+User=www-data
+Group=www-data
+Environment=NODE_ENV=production
 
-后台接口（需要 header：`x-admin-password`）：
+[Install]
+WantedBy=multi-user.target
+```
 
-- `GET /api/admin/config`
-- `PUT /api/admin/config`
-- `POST /api/admin/upload-original`
-- `POST /api/admin/upload-mask`
-- `POST /api/admin/reset-latest`
+启用并启动：
 
-## GitHub 上传必备清单
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable image-fill.service
+sudo systemctl start image-fill.service
+sudo systemctl status image-fill.service
+```
 
-建议你上传这些文件：
+查看日志：
 
-- `server.js`
-- `package.json`
-- `.env.example`（不要上传 `.env`）
-- `public/` 整个目录
-- `nocut.jpg`（默认原图）
-- `cut.png`（默认底图 mask）
-- `.gitignore`
-- `README.md`
+```bash
+journalctl -u image-fill.service -f
+```
 
-不要上传：
+## 主要 API
 
-- `.env`
-- `node_modules/`
-- `data/`（可能含运行时结果）
-- `uploads/`（按需，可不上传）
+- `POST /api/generate`：提交文本并生成图片。
+- `GET /api/images/current`：读取当前展示图。
+- `GET /api/public-config`：读取前台展示配置。
+- `POST /api/admin/login`：后台密码登录。
+- `GET /api/admin/config`：读取后台配置（需 `x-admin-password`）。
+- `PUT /api/admin/config`：更新后台配置（需 `x-admin-password`）。
+- `POST /api/admin/upload-original`：上传原图（需 `x-admin-password`）。
+- `POST /api/admin/upload-mask`：上传 mask（需 `x-admin-password`）。
+- `POST /api/admin/reset-latest`：清空最新生成结果（需 `x-admin-password`）。
 
 ## 常见问题
 
-1. 生成失败，提示上游错误
-   - 检查 Base URL、API Key、Model 是否正确
-   - 检查上游是否已启动（new-api / grok2api）
-
-2. 图不更新
-   - 已做时间戳防缓存；如果仍不更新，按 Ctrl+F5 强刷
-
-3. 后台进不去
-   - 检查 `.env` 里的 `ADMIN_PASSWORD`
-
-## 后续建议
-
-- 增加管理员登录会话（token/cookie）
-- 增加操作日志和失败重试次数配置
-- 增加多个模板和模板选择器
+- 生成失败：检查 `config.con` 中上游地址、Key、Model 是否正确，上游服务是否可用。
+- 图片不更新：接口已禁用缓存，可尝试强制刷新浏览器。
+- 后台登录失败：确认 `ADMIN_PASSWORD` 与请求一致。

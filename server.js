@@ -5,7 +5,13 @@ const express = require("express");
 const axios = require("axios");
 const FormData = require("form-data");
 const multer = require("multer");
-require("dotenv").config();
+const dotenv = require("dotenv");
+
+const CON_FILE = path.join(__dirname, "config.con");
+if (fs.existsSync(CON_FILE)) {
+  dotenv.config({ path: CON_FILE });
+}
+dotenv.config();
 
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
