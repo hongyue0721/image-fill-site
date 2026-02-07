@@ -1,0 +1,28 @@
+{
+  "name": "image-fill-web",
+  "version": "1.0.0",
+  "description": "Natural-language image fill website with OpenAI-compatible image edit API",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "openai-compatible",
+    "image-edit",
+    "express",
+    "admin-panel"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "axios": "1.8.2",
+    "dotenv": "16.5.0",
+    "express": "4.21.2",
+    "form-data": "4.0.1",
+    "multer": "1.4.5-lts.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

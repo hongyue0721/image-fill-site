@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>管理后台</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <h1 class="brand">管理后台</h1>
+        <p class="sub">修改标题、提示词模板、API 配置，并上传原图与底图（mask）</p>
+      </header>
+
+      <section class="content admin-grid">
+        <div id="loginPanel" class="panel">
+          <div class="row">
+            <input id="adminPassword" type="password" placeholder="输入管理员密码" />
+            <button id="loginBtn">登录</button>
+          </div>
+          <div class="note">默认密码在 .env 中配置（ADMIN_PASSWORD），默认值为 admin123。</div>
+          <div id="loginStatus" class="status"></div>
+        </div>
+
+        <div id="adminPanel" class="hidden">
+          <div class="panel">
+            <h3>站点配置</h3>
+            <div class="two-col">
+              <input id="siteTitle" type="text" placeholder="网站标题" />
+              <input id="siteSubtitle" type="text" placeholder="网站副标题" />
+            </div>
+            <div class="row" style="margin-top: 10px">
+              <input id="promptTemplate" type="text" placeholder="提示词模板，例如：将这个西瓜里填满{}" />
+            </div>
+            <div class="row" style="margin-top: 10px">
+              <input id="requestTimeoutMs" type="text" placeholder="请求超时（毫秒）" />
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3>上游主通道（Primary）</h3>
+            <div class="two-col">
+              <input id="pName" type="text" placeholder="名称" />
+              <input id="pModel" type="text" placeholder="模型名" />
+            </div>
+            <div class="two-col" style="margin-top: 10px">
+              <input id="pBaseUrl" type="url" placeholder="Base URL，例如 http://127.0.0.1:3000" />
+              <input id="pApiKey" type="text" placeholder="API Key" />
+            </div>
+            <label><input id="pEnabled" type="checkbox" /> 启用主通道</label>
+          </div>
+
+          <div class="panel">
+            <h3>上游备用通道（Secondary）</h3>
+            <div class="two-col">
+              <input id="sName" type="text" placeholder="名称" />
+              <input id="sModel" type="text" placeholder="模型名" />
+            </div>
+            <div class="two-col" style="margin-top: 10px">
+              <input id="sBaseUrl" type="url" placeholder="Base URL，例如 http://127.0.0.1:8000" />
+              <input id="sApiKey" type="text" placeholder="API Key" />
+            </div>
+            <label><input id="sEnabled" type="checkbox" /> 启用备用通道</label>
+          </div>
+
+          <div class="panel">
+            <h3>图片资产</h3>
+            <p class="note">原图 = 被编辑的基础图；底图（mask）= 透明区域会被重绘。</p>
+            <div class="row">
+              <input id="uploadOriginal" type="file" accept="image/*" />
+              <button id="uploadOriginalBtn">上传原图</button>
+            </div>
+            <div class="row" style="margin-top: 10px">
+              <input id="uploadMask" type="file" accept="image/*" />
+              <button id="uploadMaskBtn">上传底图</button>
+            </div>
+            <div class="row" style="margin-top: 10px">
+              <button id="resetLatestBtn" class="ghost">重置最新结果（回到原图）</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="row">
+              <button id="saveBtn">保存全部配置</button>
+            </div>
+            <div id="adminStatus" class="status"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/admin.js"></script>
+  </body>
+</html>

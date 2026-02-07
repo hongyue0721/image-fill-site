@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>猜猜西瓜里是什么</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <h1 id="siteTitle" class="brand">猜猜西瓜里是什么</h1>
+        <p id="siteSubtitle" class="sub">猜错了当我老婆</p>
+      </header>
+
+      <section class="content">
+        <div class="image-wrap">
+          <img id="resultImage" src="/api/images/current" alt="生成结果" />
+        </div>
+
+        <div class="panel">
+          <div class="row">
+            <input id="textInput" type="text" placeholder="例如：草莓果肉、星空、奶油冰淇淋" maxlength="120" />
+            <button id="generateBtn">开始生成</button>
+          </div>
+          <div id="status" class="status"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Modal -->
+    <div id="waifuModal" class="modal-overlay">
+      <div class="modal-content">
+        <h2 class="modal-title">老婆！老婆！</h2>
+        <img class="modal-image" src="/waifu.jpg" alt="老婆" />
+        <button class="modal-close" onclick="closeModal()">关闭</button>
+      </div>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
